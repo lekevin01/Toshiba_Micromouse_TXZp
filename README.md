@@ -15,8 +15,8 @@
 
 <img src="docs/assets/robot.JPG" width="520" alt="Micromouse">
 
-<video src="docs/evidence/08_MAIN_TEST.mp4" width="520" controls muted loop playsinline poster="docs/assets/robot.JPG">
-  <a href="docs/evidence/08_MAIN_TEST.mp4">Watch the robot in action</a>
+<video src="docs/evidence/TEST_FINAL.mp4" width="520" controls muted loop playsinline poster="docs/assets/robot.JPG">
+  <a href="docs/evidence/TEST_FINAL.mp4">Watch the robot in action</a>
 </video>
 
 *Robot exploring and solving the maze*
