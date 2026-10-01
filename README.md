@@ -15,6 +15,12 @@
 
 <img src="docs/assets/robot.JPG" width="520" alt="Micromouse">
 
+<video src="docs/evidence/robot-demo.mp4" width="520" controls autoplay muted loop playsinline poster="docs/assets/robot.JPG">
+  Your browser does not support the video tag. <a href="docs/evidence/08_MAIN_TEST.mp4">Watch the robot demo</a>.
+</video>
+
+*Robot exploring and solving the maze*
+
 </div>
 
 ---
