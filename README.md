@@ -15,8 +15,8 @@
 
 <img src="docs/assets/robot.JPG" width="520" alt="Micromouse">
 
-<video src="docs/evidence/TEST_FINAL.mp4" width="520" controls muted loop playsinline poster="docs/assets/robot.JPG">
-  <a href="docs/evidence/TEST_FINAL.mp4">Watch the robot in action</a>
+<video src="https://github.com/user-attachments/assets/e84781bd-ae57-43c0-9b1a-9ac312924347" width="520" controls muted loop playsinline>
+  Your browser does not support the video tag.
 </video>
 
 *Robot exploring and solving the maze*
