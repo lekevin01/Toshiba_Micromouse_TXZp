@@ -43,8 +43,7 @@ typedef struct
     int32_t delta;              /*!< raw - prev (counts per tick) */
     int32_t position;           /*!< Accumulated signed position */
     int32_t speed;              /*!< speed (counts per second) */
-    int32_t position_history[SPEED_WINDOW_TICKS + 1];  /*!< Ring buffer of recent positions for windowed speed */
-    uint8_t history_head;                              /*!< Index of the newest entry in position_history */                 
+    int32_t delta_history[SPEED_WINDOW_TICKS];  /*!< FIR delay line: delta_history[k] = d[n-k] */
 } encoder_t;
 
 

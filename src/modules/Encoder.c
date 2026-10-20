@@ -5,8 +5,7 @@
  * @date        17-06-2026
  *
  * @details
- *   Reads A-ENC32 hardware counters, computes delta since last tick,
- *   applies IIR filtering on speed, and maintains a signed position.
+ *   Reads A-ENC32 hardware counters
  * 
  *   Motor Datasheet:
  *      https://www.pololu.com/file/0J1487/pololu-micro-metal-gearmotors-rev-6-2.pdf
@@ -64,33 +63,46 @@ static const int32_t enc_sign[2] =
     MOTOR_SIGN_RIGHT
 };
 
+/* Moving-average FIR taps h[k]. Output is scaled to CPS by 1000 / SPEED_WINDOW_TICKS. */
+static const int32_t speed_fir_coeff[SPEED_WINDOW_TICKS] =
+{
+    1, 1, 1, 1, 1,  1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,  1, 1, 1, 1, 1
+};
+
 /* ==========================================================================
  *   Private Helpers
  * ========================================================================== */
 
 /**
- * @brief  Compute speed over a multi-tick window to beat count quantization.
+ * @brief  Compute speed with a 20-tap moving-average FIR over encoder deltas.
  * @param  enc  Pointer to the encoder state.
  * @return int32_t  Speed in counts per second.
  * @details
- *   Differences the current position against the position SPEED_WINDOW_TICKS
- *   ticks ago. Counting over a longer window yields more counts per
- *   measurement, so the result resolves in finer steps than the 1-tick delta
- *   (which only ever sees 0 or 1 count at low speed).
- *   CPS = counts_in_window x (1000 / SPEED_WINDOW_TICKS).
+ *   Direct-form FIR, N = SPEED_WINDOW_TICKS:
+ *     y[n] = h[0]d[n] + h[1]d[n-1] + ... + h[N-1]d[n-N+1]
+ *   With h[k] = 1 this is a moving average. Averaging over N ticks resolves
+ *   speed in finer steps than the 1-tick delta, which only ever sees 0 or 1
+ *   count at low speed.
+ *   CPS = y[n] x (1000 / SPEED_WINDOW_TICKS).
+ *   First null at 1000 / N Hz, delay (N - 1) / 2 ticks.
  */
 static int32_t Encoder_WindowedSpeed(encoder_t *enc)
 {
-    uint8_t oldest_head;
-    int32_t counts_in_window;
+    uint8_t k;
+    int32_t acc = 0;
 
-    enc->history_head = (uint8_t)((enc->history_head + 1U) % (SPEED_WINDOW_TICKS + 1U));
-    enc->position_history[enc->history_head] = enc->position;
+    /* Shift the delay line: d[n-k] <- d[n-k+1] */
+    for (k = (uint8_t)(SPEED_WINDOW_TICKS - 1U); k > 0U; k--)
+        enc->delta_history[k] = enc->delta_history[k - 1U];
 
-    oldest_head = (uint8_t)((enc->history_head + 1U) % (SPEED_WINDOW_TICKS + 1U));
-    counts_in_window = enc->position - enc->position_history[oldest_head];
+    enc->delta_history[0] = enc->delta;
 
-    return counts_in_window * (1000 / SPEED_WINDOW_TICKS);
+    /* Multiply-accumulate: y[n] = sum h[k] * d[n-k] */
+    for (k = 0U; k < SPEED_WINDOW_TICKS; k++)
+        acc += speed_fir_coeff[k] * enc->delta_history[k];
+
+    return acc * (1000 / SPEED_WINDOW_TICKS);
 }
 
 
@@ -118,9 +130,8 @@ void Encoder_Init(void)
         enc_state[i].speed      = 0;
  
         /* Speed window */
-        enc_state[i].history_head = 0;
-        for (uint8_t j = 0; j <= SPEED_WINDOW_TICKS; j++)
-            enc_state[i].position_history[j] = 0;
+        for (uint8_t j = 0; j < SPEED_WINDOW_TICKS; j++)
+            enc_state[i].delta_history[j] = 0;
     }
 
     
